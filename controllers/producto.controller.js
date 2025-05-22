@@ -1,17 +1,37 @@
-const getConnection = require('../config/db');
+const oracledb = require('oracledb');
+const { executeProcedure } = require('../utils/dbUtils');
 
-const obtenerProductos = async(req, res) => {
+
+const consultaProductos = async(req, res) => {
     try {
-        const conn = await getConnection(); // Espera a que se establezca la conexión a la base de datos.
-        const result = await conn.execute("SELECT * FROM PRODUCTOS", [], {outFormat: 4002});// Espera a que se ejecute la consulta SQL.
-        await conn.close();// espera que se cierre la base para continuar 
-        res.json(result.rows);
+        const { id } = req.params;
+        if (!id || isNaN(Number(id))) {
+            return res.status(400).send("El parámetro 'id' es requerido.");
+        }
+        const params = {
+            p_id: id,
+            r_nombre: { dir: oracledb.BIND_OUT, type: oracledb.STRING },
+            r_precio: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER },
+        };
+        const procedure = "BEGIN SISPLAY.TEST.obtener_productos_pr(:p_id, :r_nombre, :r_precio); END;";
+        const result = await executeProcedure(procedure, params);
+
+        res.json(result.outBinds);
     } catch (error) {
-        console.error(error);
+        console.error("Error al obtener productos:", error);
         res.status(500).send("Error al obtener productos");
     }
 };
 
+const obternerProductos = async(req, res)=>{
+    try {
+            
+    } catch (error) {
+        
+    }
+};
+
 module.exports = {
-    obtenerProductos
+    consultaProductos,
+    obternerProductos
 }
